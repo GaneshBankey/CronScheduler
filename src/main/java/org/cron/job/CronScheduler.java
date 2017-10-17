@@ -50,15 +50,14 @@ public class CronScheduler {
 			LOG.info(name + " [" + completedTasks.get() + "] start: "
 					+ getCurrentZonedDateTime());
 			try {
-				taskWork.processUserCommand();
-				LOG.info(name + " finish work in " + getCurrentZonedDateTime());
+				taskWork.emptyProcessUserCommand();
+				
 			} catch (Exception ex) {
 				LOG.error(name + " throw exception in " + getCurrentZonedDateTime(), ex);
 			} 
 			scheduleNextTask(doTaskWork());
 			LOG.info(name + " [" + completedTasks.get() + "] finish: "
-					+ getCurrentZonedDateTime());
-			LOG.info(name + " completed tasks: "
+					+ getCurrentZonedDateTime()+ " completed tasks: "
 					+ completedTasks.incrementAndGet());
 		};
 	}
@@ -90,6 +89,20 @@ public class CronScheduler {
 		int day = zonedNow.getDayOfMonth();
 		int month = zonedNow.getMonthValue();
 		int year = zonedNow.getYear();
+		if(second > 60){
+			second = 0;
+			minute +=1;
+		}
+		if(minute >60){
+			minute = 0;
+			hour +=1;
+		}
+		if(hour > 24){
+			hour =0;
+			day +=1;
+		}
+		
+		
 		
 		return ZonedDateTime.of(year,month, day, hour, minute, second, 0, zonedNow.getZone());
 	}
