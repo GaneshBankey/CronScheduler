@@ -12,7 +12,6 @@ public class CommandExecutor {
 		try {
 			LOG.info("Start Executing command: "+command);
 			p = Runtime.getRuntime().exec(command);
-			System.out.println("Waiting for batch file ...");
 			statusCode = p.waitFor();
 			LOG.info("Finished Executing command: "+command);
 		} catch (Exception e) {

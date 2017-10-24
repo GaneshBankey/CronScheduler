@@ -1,8 +1,12 @@
 package org.cron.job;
 
+import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -42,7 +46,7 @@ public class CronScheduler {
 	}
 
 	public void start() {
-		scheduleNextTask(doTaskWork());
+		scheduleNextTask(doTaskWork(), true);
 	}
 
 	private Runnable doTaskWork() {
@@ -55,62 +59,63 @@ public class CronScheduler {
 			} catch (Exception ex) {
 				LOG.error(name + " throw exception in " + getCurrentZonedDateTime(), ex);
 			} 
-			scheduleNextTask(doTaskWork());
+			scheduleNextTask(doTaskWork(), false);
 			LOG.info(name + " [" + completedTasks.get() + "] finish: "
 					+ getCurrentZonedDateTime()+ " completed tasks: "
 					+ completedTasks.incrementAndGet());
 		};
 	}
 
-	private void scheduleNextTask(Runnable task) {
-		LOG.info(name + " make schedule in " + getCurrentZonedDateTime());
-		long delay = computeNextDelay();
+	private void scheduleNextTask(Runnable task, boolean firstTrigger) {
 		
+		long delay = computeNextDelay(firstTrigger);
 		scheduledTask = executorService.schedule(task, delay, TimeUnit.SECONDS);
 	}
 
-	private long computeNextDelay() {
-		ZonedDateTime zonedNow = getCurrentZonedDateTime();
-		ZonedDateTime zonedNextTarget =getZonedNextTarget(zonedNow);
-//			zonedNextTarget = zonedNextTarget.plusDays(1);
-//		}
-		LOG.info("Next "+ name + " has schedule in " + zonedNextTarget.format(formatter));
-		Duration duration = Duration.between(zonedNow, zonedNextTarget);
-		return duration.getSeconds();
+	private long computeNextDelay(boolean isFirstTrigger) {
+		int dayOfMonth = 23;
+    	int hourofDay = 22;
+    	int minOfHour=37;
+        Calendar runDate = Calendar.getInstance();
+        runDate.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+        runDate.set(Calendar.HOUR_OF_DAY, hourofDay);
+        runDate.set(Calendar.MINUTE, minOfHour);
+        if(isFirstTrigger) {
+        	
+        	 runDate.add(Calendar.MONTH, 0);//set to next month
+        }else {
+        	 runDate.add(Calendar.MONTH, 1);//set to next month
+        }
+        Calendar cal = Calendar.getInstance();
+        long delay = (runDate.getTimeInMillis()-cal.getTimeInMillis())/1000;
+        LOG.info(name + " make schedule at "+ showTime(runDate.getTimeInMillis()) +" from current time "+  showTime(cal.getTimeInMillis())+" after delay  "+delay);
+        return delay;
 	}
 
 	public ZonedDateTime getCurrentZonedDateTime() {
 		return ZonedDateTime.now();
 	}
-	public ZonedDateTime getZonedNextTarget(ZonedDateTime zonedNow){
-		int second = zonedNow.getSecond()+5;
-		int minute = zonedNow.getMinute();
-		int hour = zonedNow.getHour();
-		int day = zonedNow.getDayOfMonth();
-		int month = zonedNow.getMonthValue();
-		int year = zonedNow.getYear();
-		if(second > 60){
-			second = 0;
-			minute +=1;
-		}
-		if(minute >60){
-			minute = 0;
-			hour +=1;
-		}
-		if(hour > 24){
-			hour =0;
-			day +=1;
-		}
-		
-		
-		
-		return ZonedDateTime.of(year,month, day, hour, minute, second, 0, zonedNow.getZone());
-	}
+
+	// Do the next date stuff
+    private Date nextDate() { 
+    	int dayOfMonth = 9;
+    	int hourofDay = 22;
+    	int minOfHour=5;
+        Calendar runDate = Calendar.getInstance();
+        runDate.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+        runDate.set(Calendar.HOUR_OF_DAY, minOfHour);
+        runDate.set(Calendar.MINUTE, 0);
+        runDate.add(Calendar.MONTH, 1);//set to next month
+        return runDate.getTime();
+    }
+    private String showTime(long milliSeconds) {
+    	Calendar runDate = Calendar.getInstance();
+    	runDate.setTimeInMillis(milliSeconds);
+        SimpleDateFormat df2 = new SimpleDateFormat("MMM-dd-yyyy HH:mm:ss");
+        return df2.format(runDate.getTime());
+    }
 	public static void main(String...argv){
-//		if(argv.length < 2 ){
-//			LOG.error("Wrong Arguments: expected datetime and Daily/Weekly/Monthly");
-//			System.out.println("Wrong Arguments: expected datetime and Daily/Weekly/Monthly");
-//		}
+		
 		String dateTime = "10/15/2017 21:49:00";
 		
 		CronScheduler scheduler = new CronScheduler("JOB", new UserTask("dir###ls -lrt"),dateTime );
