@@ -1,8 +1,6 @@
 package org.cron.job;
 
 import java.text.SimpleDateFormat;
-import java.time.Duration;
-import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
@@ -26,8 +24,8 @@ public class CronScheduler {
 
 	private final String name;
 	private final UserTask taskWork;
+	private String[] argv;
 
-	private String startDateAndTime;
 
 	/** Pattern to use for String representation of Dates/Times. */
 	private final String dateTimeFormatPattern = "MM/dd/yyyy HH:mm:ss";
@@ -38,10 +36,9 @@ public class CronScheduler {
 
 	private AtomicInteger completedTasks = new AtomicInteger(0);
 
-	public CronScheduler(String name, UserTask taskWork, String startDateAndTime) {
+	public CronScheduler(String name, UserTask taskWork, String[] argv) {
 		this.name = "Executor [" + name + "]";
 		this.taskWork = taskWork;
-		this.startDateAndTime   = startDateAndTime;
 
 	}
 
@@ -73,9 +70,10 @@ public class CronScheduler {
 	}
 
 	private long computeNextDelay(boolean isFirstTrigger) {
-		int dayOfMonth = 23;
-    	int hourofDay = 22;
-    	int minOfHour=37;
+		int dayOfMonth = (argv.length>0)? Integer.parseInt(argv[0]):9;
+    	int hourofDay = (argv.length>1)? Integer.parseInt(argv[1]):21;
+    	int minOfHour=(argv.length>2)? Integer.parseInt(argv[2]):0;
+    	
         Calendar runDate = Calendar.getInstance();
         runDate.set(Calendar.DAY_OF_MONTH, dayOfMonth);
         runDate.set(Calendar.HOUR_OF_DAY, hourofDay);
@@ -95,19 +93,7 @@ public class CronScheduler {
 	public ZonedDateTime getCurrentZonedDateTime() {
 		return ZonedDateTime.now();
 	}
-
-	// Do the next date stuff
-    private Date nextDate() { 
-    	int dayOfMonth = 9;
-    	int hourofDay = 22;
-    	int minOfHour=5;
-        Calendar runDate = Calendar.getInstance();
-        runDate.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-        runDate.set(Calendar.HOUR_OF_DAY, minOfHour);
-        runDate.set(Calendar.MINUTE, 0);
-        runDate.add(Calendar.MONTH, 1);//set to next month
-        return runDate.getTime();
-    }
+	
     private String showTime(long milliSeconds) {
     	Calendar runDate = Calendar.getInstance();
     	runDate.setTimeInMillis(milliSeconds);
@@ -118,7 +104,7 @@ public class CronScheduler {
 		
 		String dateTime = "10/15/2017 21:49:00";
 		
-		CronScheduler scheduler = new CronScheduler("JOB", new UserTask("dir###ls -lrt"),dateTime );
+		CronScheduler scheduler = new CronScheduler("JOB", new UserTask("dir###ls -lrt"),argv );
 		scheduler.start();
 	}
 }
