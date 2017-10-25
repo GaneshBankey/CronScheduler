@@ -39,7 +39,7 @@ public class CronScheduler {
 	public CronScheduler(String name, UserTask taskWork, String[] argv) {
 		this.name = "Executor [" + name + "]";
 		this.taskWork = taskWork;
-
+		this.argv = argv;
 	}
 
 	public void start() {
@@ -78,6 +78,18 @@ public class CronScheduler {
         runDate.set(Calendar.DAY_OF_MONTH, dayOfMonth);
         runDate.set(Calendar.HOUR_OF_DAY, hourofDay);
         runDate.set(Calendar.MINUTE, minOfHour);
+        
+        int whichDay= runDate.get(Calendar.DAY_OF_WEEK);
+		dayOfMonth = runDate.getActualMaximum(Calendar.DAY_OF_MONTH);
+		switch(whichDay){
+			case Calendar.SATURDAY:
+				runDate.set(Calendar.DAY_OF_MONTH, dayOfMonth-1);
+				break;
+			case Calendar.SUNDAY:
+				runDate.set(Calendar.DAY_OF_MONTH, dayOfMonth-2);
+				break;
+		}
+        
         if(isFirstTrigger) {
         	
         	 runDate.add(Calendar.MONTH, 0);//set to next month
