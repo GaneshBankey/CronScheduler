@@ -1,0 +1,16 @@
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types._
+
+val df = Seq(
+  (1, "11-12-1980"), 
+  (2, "03-05-2007"), 
+  (3, "05-09-1990"), 
+  (4, "09-08-2002")).toDF("my_id", "my_date")
+
+val df_date= df.select($"my_id", $"my_date", unix_timestamp($"my_date", "dd-MM-yyyy").cast(TimestampType).as("timestamp"))
+
+df_date.printSchema
+
+var max_date = df_date.agg(max($"timestamp"))
+
+max_date.show()
