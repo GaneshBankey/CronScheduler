@@ -14,3 +14,24 @@ df_date.printSchema
 var max_date = df_date.agg(max($"timestamp"))
 
 max_date.show()
+
+-----------------------------------------Another Approach------------------------------------------------------------------------------------
+import java.sql.Timestamp
+import java.text.SimpleDateFormat
+import java.util.Date
+import org.apache.spark.sql.functions.udf
+
+def getTimestamp(x:Any) :java.sql.Timestamp = {
+    val format = new SimpleDateFormat("dd-MM-yyyy")
+    if (x.toString() == "") 
+    return null
+    else {
+        val d = format.parse(x.toString());
+        val t = new Timestamp(d.getTime());
+        return t
+    }
+}
+
+val udfGetTimestamp= udf(getTimestamp _)
+
+val df_date= df.select($"my_id", $"my_date", udfGetTimestamp= ($"my_date").as("timestamp"))
