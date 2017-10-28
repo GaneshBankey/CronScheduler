@@ -17,7 +17,7 @@ var max_df = df_date.agg((max($"my_date")).as("max_date"))
 max_df.show()
 
 
-var filtered_df = df_date.filter($"my_date" !== max_df.first().get(0))
+var filtered_df = df_date.filter($"my_date" !== max_df.first().getDate(0))
 
 filtered_df.show
 
