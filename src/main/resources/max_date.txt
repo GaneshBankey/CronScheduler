@@ -35,3 +35,6 @@ def getTimestamp(x:Any) :java.sql.Timestamp = {
 val udfGetTimestamp= udf(getTimestamp _)
 
 val df_date= df.select($"my_id", $"my_date", udfGetTimestamp= ($"my_date").as("timestamp"))
+
+
+df1.join(df2, df1("user_id") === df2("valid_id"))
