@@ -1,3 +1,5 @@
+spark-shell --jars $(echo ./my_jars/*.jar | tr '' ',')
+
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 
