@@ -44,3 +44,5 @@ val udfGetTimestamp= udf(getTimestamp _)
 
 val df_date= df.select($"my_id", $"my_date", udfGetTimestamp= ($"my_date").as("timestamp"))
 
+https://jaceklaskowski.gitbooks.io/mastering-apache-spark/spark-sql-DataFrame.html
+
