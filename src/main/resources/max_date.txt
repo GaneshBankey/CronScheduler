@@ -9,13 +9,19 @@ val df = Seq(
   (3, "05-09-1990"), 
   (4, "09-08-2002")).toDF("my_id", "my_date")
 
-val df_date= df.select($"my_id", $"my_date", unix_timestamp($"my_date", "dd-MM-yyyy").cast(TimestampType).as("timestamp"))
+val df_date= df.select($"my_id", to_date(unix_timestamp($"my_date", "dd-MM-yyyy").cast(TimestampType)).as("my_date"))
 
 df_date.printSchema
 
-var max_date = df_date.agg(max($"timestamp"))
+var max_df = df_date.agg((max($"my_date")).as("max_date"))
 
-max_date.show()
+
+max_df.show()
+
+
+var filtered_df = df_date.filter($"my_date" !== max_df.first().getDate(0))
+
+filtered_df.show
 
 -----------------------------------------Another Approach------------------------------------------------------------------------------------
 import java.sql.Timestamp
@@ -37,3 +43,4 @@ def getTimestamp(x:Any) :java.sql.Timestamp = {
 val udfGetTimestamp= udf(getTimestamp _)
 
 val df_date= df.select($"my_id", $"my_date", udfGetTimestamp= ($"my_date").as("timestamp"))
+
