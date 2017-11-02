@@ -11,6 +11,7 @@ import org.apache.poi.ss.usermodel.DataFormatter
 import org.apache.poi.ss.usermodel.DateUtil
 import scala.collection.JavaConversions._
 import org.apache.poi.openxml4j.opc.OPCPackage
+import java.util.ArrayList
 
 import org.apache.spark.sql.types.{StructField, StringType}
 
@@ -28,8 +29,8 @@ val rowIterator = sheet.rowIterator()
 rowIterator.hasNext
 val headers = rowIterator.next()
 val fs = headers.map(f => StructField(f.getStringCellValue, StringType, true))
-val schema = new StructType()
-for(elem <- fs) schema.add(elem)
+val schema = new StructType(fs.toArray)
+
 
 rowIterator.hasNext
 val rowData = rowIterator.next()
@@ -64,3 +65,4 @@ while(rowIterator.hasNext){
 
       import org.apache.spark.sql.types.{StructField, StringType}
       val fs = headers.split(",").map(f => StructField(f, StringType))
+https://gist.github.com/yzhong52/f81e929e5810271292bd08856e2f4512
