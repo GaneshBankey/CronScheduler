@@ -66,3 +66,5 @@ while(rowIterator.hasNext){
       import org.apache.spark.sql.types.{StructField, StringType}
       val fs = headers.split(",").map(f => StructField(f, StringType))
 https://gist.github.com/yzhong52/f81e929e5810271292bd08856e2f4512
+
+https://index.scala-lang.org/crealytics/spark-excel/spark-excel/0.9.5?target=_2.11
