@@ -146,9 +146,11 @@ class StreamXSSFSheetHandler (var stylesTable : StylesTable, var sharedStringsTa
             if (lastColumnNumber == -1) {
                 lastColumnNumber = 0
             }
-            if((thisColumn - lastColumnNumber) > 1) {
-                //if previous cell is empty
-                output.add("");
+            if((thisColumn - lastColumnNumber) > 1 || output.size() == 0) {
+                //if previous cell is empty                
+                for (i <- lastColumnNumber until thisColumn) {
+                    output.add("")
+                }
             }
             //Adding the Cell Value in the list
             if(countrows == 0 ){
@@ -171,7 +173,7 @@ class StreamXSSFSheetHandler (var stylesTable : StylesTable, var sharedStringsTa
             if (lastColumnNumber == -1) {
                 lastColumnNumber = 0
             }
-            for (i <- lastColumnNumber until minColumnNumber -1) {
+            for (i <- lastColumnNumber until minColumnNumber) {
                 output.add("")
             }
             
