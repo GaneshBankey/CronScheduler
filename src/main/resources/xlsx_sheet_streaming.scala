@@ -1,4 +1,3 @@
-import util.control.Breaks._
 import java.util.ArrayList
 import java.io.File
 import java.io.FileInputStream
@@ -66,14 +65,13 @@ class StreamXSSFSheetHandler (var stylesTable : StylesTable, var sharedStringsTa
                 
                 var r = attributes.getValue("r");
                 var firstDigit = -1;
-                breakable {
-                    for (c <- 0 to r.length()-1){
-                        if (Character.isDigit(r.charAt(c))) {
-                            firstDigit = c
-                            break
-                        }
+                
+                for (c <- 0 to r.length()-1){
+                    if (Character.isDigit(r.charAt(c)) && firstDigit == -1) {
+                        firstDigit = c                        
                     }
                 }
+
                 
                 thisColumn = nameToColumn(r.substring(0, firstDigit));
 
@@ -117,23 +115,23 @@ class StreamXSSFSheetHandler (var stylesTable : StylesTable, var sharedStringsTa
                     thisStr =  if(first == '0') "FALSE" else "TRUE"
                 }                                    
                 case xssfDataType.ERROR => {
-                    thisStr = '"' + value.toString() + '"'   
+                    thisStr = value.toString()
                 }                    
                 case xssfDataType.FORMULA => {
                     // A formula could result in a string value,
                     // so always add double-quote characters.
-                    thisStr = '"' + value.toString() + '"'  
+                    thisStr = value.toString()
                 }                                     
                 case xssfDataType.INLINESTR => {
                     // TODO: have seen an example of this, so it's untested.
                     var rtsi = new XSSFRichTextString(value.toString())
-                    thisStr = '"' + rtsi.toString() + '"'   
+                    thisStr = rtsi.toString()
                 }                                        
                 case xssfDataType.SSTINDEX => {
                     var sstIndex = value.toString()
                     var idx = Integer.parseInt(sstIndex)
                     var rtss = new XSSFRichTextString(sharedStringsTable.getEntryAt(idx))
-                    thisStr = '"' + rtss.toString() + '"'
+                    thisStr = rtss.toString()
                 }
                 case xssfDataType.NUMBER => {
                     var n = value.toString()
@@ -148,7 +146,11 @@ class StreamXSSFSheetHandler (var stylesTable : StylesTable, var sharedStringsTa
             }
             if((thisColumn - lastColumnNumber) > 1 || output.size() == 0) {
                 //if previous cell is empty                
-                for (i <- lastColumnNumber until thisColumn) {
+                var currentThisColumn = this.thisColumn;
+                if(output.size() != 0) {//if first two column are not empty
+                    currentThisColumn = currentThisColumn -1; 
+                }
+                for (i <- lastColumnNumber until currentThisColumn) {
                     output.add("")
                 }
             }
@@ -157,9 +159,7 @@ class StreamXSSFSheetHandler (var stylesTable : StylesTable, var sharedStringsTa
                 headersName.add(thisStr);
             }else{
                 output.add(thisStr)    
-            }
-            
-            
+            }                        
             
             if (thisColumn > -1) {
                     lastColumnNumber = thisColumn 
@@ -173,13 +173,13 @@ class StreamXSSFSheetHandler (var stylesTable : StylesTable, var sharedStringsTa
             if (lastColumnNumber == -1) {
                 lastColumnNumber = 0
             }
-            for (i <- lastColumnNumber until minColumnNumber) {
+            for (i <- lastColumnNumber until minColumnNumber-1) {
                 output.add("")
             }
             
-            if(countrows > 0 ){
+            if(countrows > 0 ){                
                 rowDataRDD.add(org.apache.spark.sql.Row.fromSeq(output))
-            }
+            }            
             output.clear()
             countrows += 1            
             
@@ -216,17 +216,16 @@ class XlsxStreamReader (var fileName : String) {
         val styles = xssfReader.getStylesTable()
         val iter = xssfReader.getSheetsData().asInstanceOf[XSSFReader.SheetIterator]
         var index = 0
-        breakable {
-            while (iter.hasNext()) {
+        
+            while (iter.hasNext() && index == 0) {
                 var stream = iter.next()
                 var sheetName = iter.getSheetName(); 
                 println(sheetName + " [index=" + index + "]: is processing.")
                 processSheet(styles, this.sharedStringsTable, stream)
                 index += 1
                 stream.close()
-                break
             }
-        }
+        
     }
     def processSheet(styles: StylesTable, strings : ReadOnlySharedStringsTable, sheetInputStream:  InputStream) : Unit = {
         println("###########start process first sheet of xlsx#######")
@@ -243,18 +242,18 @@ class XlsxStreamReader (var fileName : String) {
 
 class XlsxToDataFrame  {
     def startProcess() : Unit = {
-        val streamReader = new XlsxStreamReader("/home/hduser/my_jars/StudentInfo.xlsx")
+        val streamReader = new XlsxStreamReader("/home/hduser/my_jars/abc12.xlsx")
         streamReader.startReadProcess()
+        println(headersName.size())
         val fs = headersName.map(f => StructField(f, StringType, true))
         val schema = new StructType(fs.toArray)
         val rdd = spark.sparkContext.makeRDD(rowDataRDD)
         val dataFrame = spark.createDataFrame(rdd,schema)
         dataFrame.printSchema
-        dataFrame.show()
+        dataFrame.show(1)        
     }
     
 }
 
 val xlsxToDataFrame = new XlsxToDataFrame()
 xlsxToDataFrame.startProcess()
-
